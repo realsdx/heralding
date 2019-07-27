@@ -91,7 +91,7 @@ class RDP(HandlerBase):
 
         if tls_obj:
             # value should be less that 114(57+57).
-            data = await self.recv_data(reader,96, tls_obj)
+            data = await self.recv_data(reader,1024, tls_obj)
         else:
             data = await self.recv_data(reader, 512, tls_obj)
 

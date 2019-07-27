@@ -27,6 +27,7 @@ class TLS:
         self._tlsInBuff = ssl.MemoryBIO()
         self._tlsOutBuff = ssl.MemoryBIO()
         ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1_1)
+        ctx.options |= ssl.OP_NO_TLSv1
         ctx.set_ciphers('RSA:!aNULL')
         ctx.check_hostname = False
         ctx.load_cert_chain(pem_file)
@@ -60,7 +61,9 @@ class TLS:
         return _res
 
     async def read_tls(self, size):
+        logger.debug("PENDING BYTES TO READ: " + str(self._tlsObj.pending()))
         _rData = await self.reader.read(size)
+        logger.debug("RAW BYTES : "+str(len(_rData)))
         self._tlsInBuff.write(_rData)
         data = None
         tries = 5
@@ -68,6 +71,8 @@ class TLS:
             tries = tries-1
             try:
                 data = self._tlsObj.read(size)
+                logger.debug("PENDING TLS READ: " + str(self._tlsObj.pending()))
+                data += self._tlsObj.read(size)
             except ssl.SSLWantReadError:
                 logger.debug("ssl.SSLWantReadError in tls.py")
                 pass
